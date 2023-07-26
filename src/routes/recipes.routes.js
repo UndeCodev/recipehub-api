@@ -2,7 +2,7 @@ import { Router } from 'express';
 import fileUpload from 'express-fileupload';
 
 import {
-    getRecipes,
+    getRecipesCards,
     getRecipesCardByUser,
     getRecipe,
     postRecipes,
@@ -12,9 +12,9 @@ import {
 
 const router = Router();
 
-router.get('/recipes', getRecipes);
+router.get('/recipes-cards', getRecipesCards);
 router.get('/recipes-card-by-user/:id', getRecipesCardByUser);
-router.get('/recipes/:id', getRecipe);
+router.get('/recipes/:recipeId', getRecipe);
 router.post('/recipes', fileUpload({ useTempFiles: true, tempFileDir: './public/img/recipes'}), postRecipes);
 router.patch('/recipes/:id', updateRecipe);
 router.delete('/recipes/:id', deleteRecipe);

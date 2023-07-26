@@ -2,9 +2,10 @@ import fs from 'fs-extra'
 import {pool} from '../../config/database.js';
 import { uploadImage } from '../../config/utils/imagekit.js';
 
-export const getRecipes = async(req, res) => {
+
+export const getRecipesCards = async(req, res) => {
     try{
-        const [recipes] = await pool.query('SELECT * FROM recipes');
+        const [recipes] = await pool.query('SELECT * FROM recipecardview');
 
         if(recipes.length <= 0) return res.status(404).json({
             message: 'Recipes not found'
@@ -17,6 +18,22 @@ export const getRecipes = async(req, res) => {
         });
     }
 }
+
+// export const getRecipesCardsByCategory = async(req, res) => {
+//     try{
+//         const [recipes] = await pool.query('SELECT * FROM recipecardview WHERE = ?', [req.params.category]);
+
+//         if(recipes.length <= 0) return res.status(404).json({
+//             message: 'Recipes not found'
+//         });
+
+//         res.json(recipes);     
+//     }catch(error){
+//         res.status(500).json({
+//             message: 'Recipes not found'
+//         });
+//     }
+// }
 
 export const getRecipesCardByUser = async(req, res) => {
     try{
@@ -35,17 +52,25 @@ export const getRecipesCardByUser = async(req, res) => {
 }
 
 export const getRecipe = async(req, res) => {
-    try{
-        const [recipe] = await pool.query('SELECT * FROM recipes WHERE recipe_id = ?', [req.params.id]);
-
-        if(recipe.length <= 0) return res.status(404).json({
-            message: 'Tag not found'
-        });
+    const { recipeId } = req.params
     
+    try{
+
+        const [recipe] = await pool.query('SELECT * FROM recipecardview WHERE recipe_id = ?', [recipeId]);
+        if(!recipe.length) return res.status(404).json({ message: 'Receta no encontrada'});
+
+        const [recipe_ingredients] = await pool.query('SELECT ingredient_text FROM recipe_template_ingredients WHERE recipe_id = ?', [recipeId]);
+        const [recipe_steps] = await pool.query('SELECT step_text, step_number FROM recipe_template_steps WHERE recipe_id = ?', [recipeId]);
+        const [recipe_times] = await pool.query('SELECT type_time, time FROM recipe_template_times WHERE recipe_id = ?', [recipeId]);
+
+        recipe[0].ingredients = recipe_ingredients
+        recipe[0].steps = recipe_steps
+        recipe[0].times = recipe_times
+
         res.json(recipe[0]);        
     }catch(error){
         res.status(500).json({
-            message: 'Recipe not found'
+            message: 'Receta no encontrada, intenta con otro id.'
         });
     }
 }
