@@ -1,3 +1,4 @@
+import fs from 'fs-extra'
 import {pool} from '../../config/database.js';
 import { uploadImage } from '../../config/utils/imagekit.js';
 
