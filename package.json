@@ -2,13 +2,10 @@
   "name": "recipehub-apirest",
   "version": "1.0.0",
   "main": "index.js",
-  "engines": {
-    "node": "18.17.0"
-  },
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "start": "node src/index.js"
+    "dev": "nodemon src/index.js"
   },
   "devDependencies": {
     "morgan": "^1.10.0",

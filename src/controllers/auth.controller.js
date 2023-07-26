@@ -13,7 +13,6 @@ export const signUp = async (req, res) => {
 
     try {
         const [user_found] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-
         if(user_found.length) return res.status(409).json({ message: `El usuario con el correo ${email} ya existe` });
 
         if(!req.files?.profile_picture){
@@ -32,8 +31,6 @@ export const signUp = async (req, res) => {
             [name, last_names, email, encryptedPassword, created_at, rol_id]
         );        
 
-        const [user] = await pool.query('SELECT user_id, name, last_names, email  FROM users WHERE user_id = ?', [user_created.insertId])
-        
         if(req.files?.profile_picture){
             const { profile_picture } = req.files; 
 
@@ -52,9 +49,9 @@ export const signUp = async (req, res) => {
             if(img_saved.affectedRows === 0 || img_profile.affectedRows === 0) return res.stat(404).json({
                 message: "No se puede guardar la imagen de perfil"
             });
-
-            user[0].photoURL = url
         }
+
+        const [user] = await pool.query('SELECT * FROM user_public_information WHERE user_id = ?', [user_created.insertId]);
 
         const token = jwt.sign(
             {user: user[0]},
@@ -64,8 +61,6 @@ export const signUp = async (req, res) => {
         
         res.json({token});
     } catch (error) {
-
-        console.log(error);
         return res.status(409).json({
             message: error
         })
@@ -76,22 +71,16 @@ export const signIn = async(req, res) => {
     const { email, password } = req.body;
         
     try {
-        const [user_found] = await pool.query('SELECT user_id, name, last_names, email, password FROM users WHERE email = ?', [email]);
+        const [user_found] = await pool.query('SELECT user_id, password FROM users WHERE email = ?', [email]);
         if(!user_found) return res.status(404).json({ message: 'Usuario no encontrado' });
 
         const match_password = await comparePassword(password, user_found[0].password);
         if(!match_password) return res.status(401).json({ token: null, message: "El correo electrónico o la contraseña no coinciden." });
 
-        const [photo_url] = await pool.query('SELECT image_url FROM imagesxuser_imagesview WHERE user_id = ?', [user_found[0].user_id]);
-
-        user_found[0].photoURL = photo_url[0].image_url
-        user_found[0].name = `${user_found[0].name} ${user_found[0].last_names}`
-
-        delete user_found[0].last_names
-        delete user_found[0].password
-
+        const [user] = await pool.query('SELECT * FROM user_public_information WHERE user_id = ?', [user_found[0].user_id]);
+    
         const token = jwt.sign(
-            { user: user_found[0] },
+            { user: user[0] },
             SECRET,
             { expiresIn: 86400 } // 24 hours
         )
